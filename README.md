@@ -1,108 +1,97 @@
-# Project: Resilient & Scalable Web Application Architecture on AWS ☁️
+# AWS Cloud Project: Deploying a Highly Available & Fault-Tolerant Web Architecture
 
-**[Technologies: ☁️ AWS | 🖥️ EC2 | ⚖️ ELB | 📜 AMI | 🛡️ VPC | 💾 EBS]**
-
----
-
-### ## 📖 Table of Contents
-1.  [**Project Summary**](#-project-summary)
-2.  [**Architecture Diagram**](#-architecture-diagram)
-3.  [**Core Concepts Demonstrated**](#-core-concepts-demonstrated)
-4.  [**Step-by-Step Deployment Guide**](#-step-by-step-deployment-guide)
-5.  [**How to Test the System**](#-how-to-test-the-system)
-6.  [**Project Cleanup**](#-project-cleanup)
-7.  [**Future Enhancements**](#-future-enhancements)
+![AWS](https://img.shields.io/badge/AWS-%23232F3E.svg?style=for-the-badge&logo=amazon-aws&logoColor=white) ![Amazon EC2](https://img.shields.io/badge/EC2-FF9900?style=for-the-badge&logo=amazon-ec2&logoColor=white) ![Amazon VPC](https://img.shields.io/badge/VPC-232F3E?style=for-the-badge&logo=amazon-vpc&logoColor=white) ![Shell Script](https://img.shields.io/badge/shell_script-%23121011.svg?style=for-the-badge&logo=gnu-bash&logoColor=white)
 
 ---
 
-### ## 📝 Project Summary
-
-This project demonstrates the deployment of a robust, highly available, and fault-tolerant web application using fundamental cloud-native principles on Amazon Web Services. The architecture is designed to ensure zero downtime by distributing traffic across multiple servers in different physical locations and automatically routing around failures. It serves as a practical implementation of core cloud infrastructure skills.
+> 🚀 **This project is also documented in a post on my LinkedIn profile. You can view it and join the discussion here:**
+>
+> **[View My LinkedIn Post](https://www.linkedin.com/posts/prateek-mani-tripathi-51935a259_aws-cloudcomputing-devops-activity-7374456077733724160-Gtc9?utm_source=share&utm_medium=member_desktop&rcm=ACoAAD-XD2UB3Q_7K3wzLRZFKaD5o7TxIPOLoF8)**
 
 ---
 
-### ## 🏛️ Architecture Diagram
+### ## 📖 Project Summary
 
-The infrastructure is logically isolated within a VPC and spread across two Availability Zones (AZs) for resilience. The Application Load Balancer serves as the single entry point, distributing traffic to the EC2 instances.
+This repository contains a hands-on project that demonstrates the creation of a resilient, scalable, and highly available web application infrastructure on AWS. The architecture is meticulously designed to ensure zero downtime by leveraging multiple Availability Zones, automated health checks, and a load balancing system. This project serves as a practical showcase of fundamental cloud engineering skills and best practices for building fault-tolerant systems.
 
-> **Pro Tip:** For a more professional look, you can create a graphical version of this diagram using a free tool like **diagrams.net** (draw.io) and embed the image in this README.
+---
+
+### ## 🏛️ Professional Architecture Diagram
+
+The infrastructure is logically isolated within a custom VPC. An internet-facing Application Load Balancer distributes incoming HTTP traffic across two EC2 instances, each residing in a separate Availability Zone and protected by a shared Security Group.
 
 ```
-+--------------------------------------------------------------------------------+
-| AWS Cloud                                                                      |
-|                                                                                |
-|  +--------------------------------------------------------------------------+  |
-|  | Virtual Private Cloud (VPC)                                              |  |
-|  |                                                                          |  |
-|  |    +------------------------------------------------------------------+    |  |
-|  |    | 🌐 Application Load Balancer (Internet-Facing)                 |    |  |
-|  |    +-----------------|------------------------------------------------+    |  |
-|  |                      |                                                     |  |
-|  |  +-------------------|-------------------------------------------------+  |  |
-|  |  | Target Group      |                                                 |  |  |
-|  |  +-------------------|-------------------------------------------------+  |  |
-|  |                      |                                                     |  |
-|  |  +-------------------|-----------------------+-------------------------+  |  |
-|  |  |                   |                       |                         |  |  |
-|  |  |  Availability Zone A                  |  Availability Zone B        |  |  |
-|  |  |                                       |                             |  |  |
-|  |  |  +-----------------+                  |  +-----------------+          |  |  |
-|  |  |  | 🖥️ EC2 Instance |◄----------------- |  | 🖥️ EC2 Instance |          |  |  |
-|  |  |  |   (Web Server 1)|                  |  |   (Web Server 2)|          |  |  |
-|  |  |  +-----------------+                  |  +-----------------+          |  |  |
-|  |  |                                       |                             |  |  |
-|  |  +---------------------------------------+-----------------------------+  |  |
-|  |                                                                          |  |
-|  +--------------------------------------------------------------------------+  |
-|                                                                                |
-+--------------------------------------------------------------------------------+
-
++--------------------------------------------------------------------------------------------------+
+|                                        AWS Cloud (ap-south-1)                                    |
+|                                                                                                  |
+|  +--------------------------------------------------------------------------------------------+  |
+|  |                                  Virtual Private Cloud (VPC)                               |  |
+|  |                                                                                            |  |
+|  |    +------------------------------------------------------------------------------------+    |  |
+|  |    |                            🌐 Application Load Balancer                            |    |  |
+|  |    |                        (Listens on Port 80, Spans 2 AZs)                             |    |  |
+|  |    +------------------------------------------|-------------------------------------------+    |  |
+|  |                                               |                                                |  |
+|  |  +--------------------------------------------|--------------------------------------------+  |  |
+|  |  |                     🎯 Target Group with Health Checks                                  |  |  |
+|  |  +--------------------------------------------|--------------------------------------------+  |  |
+|  |                                               |                                                |  |
+|  |     +-----------------------------------------+----------------------------------------+       |  |
+|  |     |                                                                                  |       |  |
+|  |  +--|---------------------------------------+  +----------------------------------------|--+    |  |
+|  |  |  |      Availability Zone A              |  |      Availability Zone B               |  |    |  |
+|  |  |  |                                       |  |                                        |  |    |  |
+|  |  |  |  +---------------------------------+  |  |  +----------------------------------+  |  |    |  |
+|  |  |  |  |    🛡️ Security Group           |  |  |  |    🛡️ Security Group            |  |  |    |  |
+|  |  |  |  |  (Allows Port 80 & 22)          |  |  |  |  (Allows Port 80 & 22)           |  |  |    |  |
+|  |  |  |  |                                 |  |  |  |                                  |  |  |    |  |
+|  |  |  |  |  +---------------------------+  |  |  |  |  +----------------------------+  |  |  |    |  |
+|  |  |  |  |  |     🖥️ EC2 Instance      |  |  |  |  |  |      🖥️ EC2 Instance       |  |  |  |    |  |
+|  |  |  |  |  |      (Web Server 1)     |◄-+--|---|--+--|►     (Web Server 2)      |  |  |  |    |  |
+|  |  |  |  |  +---------------------------+  |  |  |  |  +----------------------------+  |  |  |    |  |
+|  |  |  |  +---------------------------------+  |  |  +----------------------------------+  |  |    |  |
+|  |  +-------------------------------------------+  +------------------------------------------+  |  |
+|  |                                                                                            |  |
+|  +--------------------------------------------------------------------------------------------+  |
+|                                                                                                  |
++--------------------------------------------------------------------------------------------------+
 ```
 
 ---
 
-### ## ✨ Core Concepts Demonstrated
+### ## ✨ Key Cloud Concepts Implemented
 
-* **High Availability:** By deploying EC2 instances across two separate Availability Zones, the application is protected from a single point of failure at the data center level.
-* **Fault Tolerance:** The Application Load Balancer's health checks continuously monitor the status of the instances. If an instance becomes unhealthy, the ELB automatically stops sending traffic to it, ensuring users are only served by healthy servers.
-* **Scalability:** The use of a custom Amazon Machine Image (AMI) creates a "golden image" of the web server. This allows new instances to be launched rapidly and consistently, forming the foundation for horizontal scaling.
-* **Infrastructure Security:** Security Groups are configured as stateful firewalls to strictly control inbound and outbound traffic to the EC2 instances, ensuring only necessary ports (like HTTP and SSH) are exposed.
-
----
-
-### ## 🚀 Step-by-Step Deployment Guide
-
-#### Phase I: Provisioning the Foundation (EC2 & Apache)
-1.  **Launch Instance:** An Amazon Linux `t2.micro` EC2 instance was launched.
-2.  **Configure Security Group:** A firewall rule was set up to allow inbound `HTTP` (Port 80) and `SSH` (Port 22) traffic.
-3.  **Install Web Server:** Connected via SSH and installed the Apache (`httpd`) web server, enabled the service, and created a custom `index.html` page to identify it as `Server 1`.
-
-#### Phase II: Creating a Scalable Blueprint (AMI)
-1.  From the fully configured and running EC2 instance, a custom **Amazon Machine Image (AMI)** was created. This captures the state of the instance, including the OS, Apache configuration, and website files, into a reusable template.
-
-#### Phase III: Horizontal Scaling (Launching Second Instance)
-1.  A second EC2 instance was launched, but instead of using a default OS image, it was launched from the **custom AMI** created in Phase II.
-2.  This new instance (`Server 2`) was a perfect clone and instantly operational. Its `index.html` file was slightly modified for testing purposes.
-
-#### Phase IV: Implementing the Load Balancer (ELB)
-1.  **Create Target Group:** A target group was created, and both EC2 instances were registered. Health checks were configured to monitor the instances' health.
-2.  **Launch ELB:** An internet-facing **Application Load Balancer** was deployed and configured to listen for HTTP traffic on port 80 and forward it to the registered targets in the target group.
+* **High Availability:** Deployed instances across two physically isolated Availability Zones to ensure the application remains operational even if one data center fails.
+* **Fault Tolerance:** The Application Load Balancer automatically performs health checks and reroutes traffic away from any unhealthy or failing instances, ensuring seamless service continuity.
+* **Scalability:** Created a custom Amazon Machine Image (AMI) from a fully configured server. This "golden image" enables rapid, consistent, and automated horizontal scaling to handle increased traffic.
+* **Infrastructure Security:** Utilized Security Groups as a stateful firewall to enforce strict access rules, allowing only necessary HTTP and SSH traffic to the EC2 instances.
 
 ---
 
-### ## ✅ How to Test the System
-The success of the architecture is verified by accessing the public **DNS name** of the Application Load Balancer in a web browser. By repeatedly refreshing the page, the content can be seen switching between the pages served by "Server 1" and "Server 2," which confirms that the load balancing is working correctly.
+### ## 🚀 Step-by-Step Deployment Walkthrough
+
+1.  **Foundation:** Launched an Amazon Linux EC2 instance, installed an Apache web server, and configured it with a custom webpage.
+2.  **Blueprint:** Created a reusable server template (AMI) from this configured instance to serve as a blueprint for all future web servers.
+3.  **Scaling Out:** Launched a second EC2 instance from the custom AMI in a different Availability Zone to build redundancy.
+4.  **Traffic Management:** Deployed an Application Load Balancer (ELB) and configured it with a target group containing both instances. The ELB was set up to listen for web traffic and distribute it across the healthy targets.
+
+---
+
+### ## ✅ Final Result & Verification
+
+The success of the architecture was verified by accessing the ELB's public DNS name. Refreshing the browser repeatedly showed the website content alternating between "Server 1" and "Server 2," confirming that the load balancing was functioning perfectly.
 
 ---
 
 ### ## 🧹 Project Cleanup
-To prevent ongoing AWS charges, all resources were terminated and deleted after project completion. The correct deletion order is: **ELB ➔ EC2 Instances ➔ Target Group ➔ AMI ➔ EBS Snapshots ➔ Security Group**.
+
+To adhere to best practices and avoid unnecessary costs, all AWS resources were decommissioned and deleted in the correct dependency order after the project's completion.
 
 ---
 
-### ## 🔮 Future Enhancements
-This foundational project can be extended with more advanced AWS services:
-* **Auto Scaling Group:** To automatically add or remove instances based on traffic load.
-* **Amazon RDS:** To add a managed database for a dynamic application.
-* **AWS Route 53:** To map a custom domain name (e.g., `www.my-cool-project.com`) to the Load Balancer.
-* **AWS Certificate Manager (ACM):** To add a free SSL/TLS certificate and enable HTTPS.
+### ## 🔮 Potential Future Enhancements
+
+* **Automation:** Implement an **Auto Scaling Group** to automatically scale the number of EC2 instances based on CPU utilization.
+* **Database Tier:** Add a managed database layer using **Amazon RDS** for dynamic applications.
+* **DNS & Security:** Use **AWS Route 53** to map a custom domain name and **AWS Certificate Manager (ACM)** to enable HTTPS.
+* **CI/CD:** Build a CI/CD pipeline using **AWS CodePipeline** to automate application deployments.
